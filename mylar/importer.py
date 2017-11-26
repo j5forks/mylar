@@ -911,7 +911,7 @@ def GCDimport(gcomicid, pullupd=None, imported=None, ogcname=None):
 
             for result in results:
                 foundNZB = "none"
-                if (mylar.CONFIG.NZBSU or mylar.CONFIG.DOGNZB or mylar.CONFIG.EXPERIMENTAL or mylar.CONFIG.NEWZNAB) and (mylar.CONFIG.SAB_HOST):
+                if (mylar.CONFIG.NZBSU or mylar.CONFIG.DOGNZB or mylar.CONFIG.EXPERIMENTAL or mylar.CONFIG.NEWZNAB or mylar.CONFIG.ENABLE_TORZNAB or mylar.CONFIG.ENABLE_EXTRA_TORZNAB) and (mylar.CONFIG.SAB_HOST):
                     foundNZB = search.searchforissue(result['IssueID'])
                     if foundNZB == "yes":
                         updater.foundsearch(result['ComicID'], result['IssueID'])
