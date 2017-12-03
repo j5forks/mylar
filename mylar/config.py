@@ -815,6 +815,7 @@ class Config(object):
                     PR_NUM +=1
 
         if self.ENABLE_EXTRA_TORZNAB:
+            logger.fdebug('provider order, extra torznabs enabled')
             for ets in self.EXTRA_TORZNABS:
                 logger.fdebug('Extra torznab enabled: ' + str(ets[5]))
                 if str(ets[5]) == '1':

@@ -1921,15 +1921,19 @@ def provider_sequence(nzbprovider, torprovider, newznab_hosts, torznab_hosts):
     prov_order = []
 
     nzbproviders_lower = [x.lower() for x in nzbprovider]
+    torproviders_lower = [x.lower() for x in torprovider]
 
     if len(mylar.CONFIG.PROVIDER_ORDER) > 0:
         for pr_order in sorted(mylar.CONFIG.PROVIDER_ORDER.items(), key=itemgetter(0), reverse=False):
-            if (pr_order[1].lower() in torprovider) or any(pr_order[1].lower() in x for x in nzbproviders_lower):
+            logger.info('provider: ' + pr_order[1].lower())
+            if (pr_order[1].lower() in torprovider) or any(pr_order[1].lower() in x for x in nzbproviders_lower) or any(pr_order[1].lower() in x for x in torproviders_lower):
                 if any(pr_order[1].lower() in x for x in nzbproviders_lower):
                     # this is for nzb providers
                     for np in nzbprovider:
+                        logger.fdebug('np: ' + np)
                         if all(['newznab' in np, pr_order[1].lower() in np.lower()]):
                             for newznab_host in newznab_hosts:
+                                logger.fdebug('newznab host: ' + newznab_host[0].lower() + ', ' + pr_order[1].lower())
                                 if newznab_host[0].lower() == pr_order[1].lower():
                                     prov_order.append(np) #newznab_host)
                                     newznab_info.append({"provider":     np,
@@ -1947,9 +1951,10 @@ def provider_sequence(nzbprovider, torprovider, newznab_hosts, torznab_hosts):
                             break
                 else:
                     for tp in torprovider:
-                        logger.fdebug('Torprovider: ' + tp)
+                        logger.fdebug('Torprovider: ' + tp + ', ' + pr_order[1].lower())
                         if all(['torznab' in tp, pr_order[1].lower() in tp.lower()]):
                             for torznab_host in torznab_hosts:
+                                logger.fdebug('torznab host: ' + torznab_host[0].lower() + ', ' + pr_order[1].lower())
                                 if torznab_host[0].lower() == pr_order[1].lower():
                                     prov_order.append(tp) #torznab_host
                                     torznab_info.append({"provider":    tp,
@@ -2309,7 +2314,7 @@ def searcher(nzbprov, nzbname, comicinfo, link, IssueID, ComicID, tmpprov, direc
     #end blackhole
 
     #torrents (32P & TPSE & DEM)
-    elif any([nzbprov == '32P', nzbprov == 'TPSE', nzbprov == 'WWT', nzbprov == 'DEM', nzbprov == 'Torznab']):
+    elif any([nzbprov == '32P', nzbprov == 'TPSE', nzbprov == 'WWT', nzbprov == 'DEM', nzbprov == 'Torznab', nzbprov == 'extra_torznab']):
         logger.fdebug("ComicName:" + ComicName)
         logger.fdebug("link:" + link)
         logger.fdebug("Torrent Provider:" + nzbprov)
@@ -2826,6 +2831,9 @@ def generate_id(nzbprov, link):
             if end == -1:
                 end = len(tmpid)
             nzbid = re.sub('&id=', '', tmpid[st:end]).strip()
+    elif 'torznab' in nzbprov:
+        # don't know what to do here
+        logger.fdebug('Trying to find via ' + nzbprov + ' using ' + link)
     elif nzbprov == 'Torznab':
         if mylar.CONFIG.TORZNAB_HOST.endswith('/'):
             tmphost = mylar.CONFIG.TORZNAB_HOST + 'download/'
