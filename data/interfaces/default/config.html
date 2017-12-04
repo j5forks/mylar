@@ -787,10 +787,68 @@
                                                 <label>Torznab Category</label>
                                                 <input type="text" name="torznab_category" value="${config['torznab_category']}" size="12">
                                             </div>
+                                            <div class="row checkbox left clearfix">
+                                                <input type="checkbox" id="enable_extra_torznab" onclick="initConfigCheckbox($(this));" name="enable_extra_torznab" value=1 ${config['enable_extra_torznab']} /><label>Enable Extra Torznabs</label>
+                                             </div>
                                         </div>
                                 </div>
                         </fieldset>
+                        <fieldset>
+                          <div id="torznab_providers">
+                                <%
+                                    torznab_number = 1
+                                %>
+                                %for torznab in config['extra_torznabs']:
+                                    <%
+                                        if torznab[5] == '1' or torznab[5] == 1:
+                                            torznab_enabled = "checked"
+                                        else:
+                                            torznab_enabled = ""
 
+                                        if torznab[2] == '1' or torznab[2] == 1:
+                                            torznab_verify = "checked"
+                                        else:
+                                            torznab_verify = ""
+                                    %>
+                                    <div class="config" id="torznab${torznab_number}">
+                                        <div class="row">
+                                            <label>Torznab Name</label>
+                                            <input type="text" name="torznab_name${torznab_number}" value="${torznab[0]}" size="30">
+                                        </div>
+                                        <div class="row">
+                                            <label>Torznab Host</label>
+                                            <input type="text" name="torznab_host${torznab_number}" value="${torznab[1]}" size="30">
+                                        </div>
+                                        <div class="row checkbox">
+                                            <input id="torznab_verify" type="checkbox" name="torznab_verify${torznab_number}" value="1" ${torznab_verify} /><label>Verify SSL</label>
+                                        </div>
+                                        <div class="row">
+                                            <label>Torznab API</label>
+                                            <input type="text" name="torznab_api${torznab_number}" value="${torznab[3]}" size="36">
+                                        </div>
+                                        <div class="row">
+                                            <label>Torznab Category</label>
+                                            <input type="text" name="torznab_category${torznab_number}" value="${torznab[4]}" size="15">
+                                            <small>( only needed for RSS feed )</small>
+                                        </div>
+                                        <div class="row checkbox">
+                                            <input id="torznab_enabled" type="checkbox" name="torznab_enabled${torznab_number}" value="1" ${torznab_enabled} /><label>Enabled</label>
+<!--
+                                            <input type="button" value="Test ${torznab[0]}" id="torznab_test(torznab${torznab_number})" style="float:center" /></br>
+                                            <img name="torznabstatus${torznab_number}" id="torznabstatus${torznab_number}" src="interfaces/default/images/torznab_success.png" style="vertical-align: middle; margin: 3px; margin-top: -1px;" height="10" width="10" DISABLED />
+-->
+                                        </div>
+                                        <div class="row">
+                                            <input type="button" class="remove" id="torznab${torznab_number}" value="Remove ${torznab[0]}">
+                                        </div>
+                                    </div>
+                                    <%
+                                        torznab_number += 1
+                                    %>
+                                %endfor
+                                <input type="button" value="Add Torznab" class="add_torznab" id="add_torznab" />
+                            </div>
+                        </fieldset>
                 </td>
         
                 <td>
@@ -1885,6 +1943,20 @@
                     $("#add_newznab").before(formfields);
                 });
 
+                $("#add_torznab").click(function() {
+                    var intId = $("#torznab_providers > div").size() + deletedTorznabs + 1;
+                    var formfields = $("<div class=\"config\" id=\"torznab" + intId + "\"><div class=\"row\"><label>Torznab Name</label><input type=\"text\" name=\"torznab_name" + intId + "\" size=\"36\"></div><div class=\"row\"><label>Torznab Host</label><input type=\"text\" name=\"torznab_host" + intId + "\" + value=\"http://\" + size=\"30\"></div><div class=\"row checkbox\"><input type=\"checkbox\" name=\"torznab_verify" + intId + "\" value=\"0\" checked /><label>Verify SSL</label></div><div class=\"row\"><label>Torznab API</label><input type=\"text\" name=\"torznab_api" + intId + "\" size=\"36\"></div><div class=\"row\"><label>Torznab UID</label><input type=\"text\" name=\"torznab_uid" + intId + "\" size=\"15\"></div><div class=\"row checkbox\"><input type=\"checkbox\" name=\"torznab_enabled" + intId + "\" value=\"1\" checked /><label>Enabled</label></div>");
+                    var removeButton = $("<div class=\"row\"><input type=\"button\" class=\"remove\" value=\"Remove\" /></div>");
+                    removeButton.click(function() {
+                        $(this).parent().remove();
+                        deletedTorznabs = deletedTorznabs + 1;
+
+                    });
+                    formfields.append(removeButton);
+                    formfields.append("</div>");
+                    $("#add_torznab").before(formfields);
+                });
+
                 function addAction() {
                         $('#autoadd').append('<input type="hidden" name="tsab" value=1 />');
                 };
@@ -2019,7 +2091,7 @@
 		$(function() {
 			$( "#tabs" ).tabs();
 		});
-		initActions();
+		            initActions();
                 changeTest();
                 initConfigCheckbox("#launch_browser");
                 initConfigCheckbox("#enable_https");
@@ -2029,14 +2101,15 @@
                 initConfigCheckbox("#rtorrent_ssl");
                 initConfigCheckbox("#usenewznab");
                 initConfigCheckbox("#enable_torznab");
-		initConfigCheckbox("#usenzbsu");
+                initConfigCheckbox("#enable_extra_torznab");
+		            initConfigCheckbox("#usenzbsu");
                 initConfigCheckbox("#usedognzb");
                 initConfigCheckbox("#enable_torrents");
                 initConfigCheckbox("#enable_torrent_search");
                 initConfigCheckbox("#enable_32p");
                 initConfigCheckbox("#enable_rss");
-		initConfigCheckbox("#useexperimental");
-		initConfigCheckbox("#useraw");
+		            initConfigCheckbox("#useexperimental");
+		            initConfigCheckbox("#useraw");
                 initConfigCheckbox("#replace_spaces");
                 initConfigCheckbox("#use_minsize");
                 initConfigCheckbox("#use_maxsize");

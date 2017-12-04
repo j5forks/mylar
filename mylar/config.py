@@ -226,11 +226,13 @@ _CONFIG_DEFINITIONS = OrderedDict({
     'EXTRA_NEWZNABS': (str, 'Newznab', ""),
 
     'ENABLE_TORZNAB': (bool, 'Torznab', False),
+    'ENABLE_EXTRA_TORZNAB': (bool, 'Torznab', False),
     'TORZNAB_NAME': (str, 'Torznab', None),
     'TORZNAB_HOST': (str, 'Torznab', None),
     'TORZNAB_APIKEY': (str, 'Torznab', None),
     'TORZNAB_CATEGORY': (str, 'Torznab', None),
     'TORZNAB_VERIFY': (bool, 'Torznab', False),
+    'EXTRA_TORZNABS': (str, 'Torznab', ""),
 
     'EXPERIMENTAL': (bool, 'Experimental', False),
     'ALTEXPERIMENTAL': (bool, 'Experimental', False),
@@ -474,6 +476,7 @@ class Config(object):
     def read(self):
         self.config_vals()
         setattr(self, 'EXTRA_NEWZNABS', self.get_extra_newznabs())
+        setattr(self, 'EXTRA_TORZNABS', self.get_extra_torznabs())
         if any([self.CONFIG_VERSION == 0, self.CONFIG_VERSION < self.newconfig]):
             try:
                 shutil.move(self._config_file, os.path.join(mylar.DATA_DIR, 'config.ini.backup'))
@@ -574,7 +577,7 @@ class Config(object):
         Given a big bunch of key value pairs, apply them to the ini.
         """
         for name, value in kwargs.items():
-            if not any([(name.startswith('newznab') and name[-1].isdigit()), name.startswith('Torznab')]):
+            if not any([(name.startswith('newznab') and name[-1].isdigit()), (name.startswith('torznab') and name[-1].isdigit()), name.startswith('Torznab')]):
                 key, definition_type, section, ini_key, default = self._define(name)
                 try:
                     if any([value == "", value is None, len(value) == 0]) and definition_type == str:
@@ -637,6 +640,7 @@ class Config(object):
         logger.fdebug("Writing configuration to file")
         self.provider_sequence()
         config.set('Newznab', 'extra_newznabs', ', '.join(self.write_extras(self.EXTRA_NEWZNABS)))
+        config.set('Torznab', 'extra_torznabs', ', '.join(self.write_extras(self.EXTRA_TORZNABS)))
         ###this should be moved elsewhere...
         if type(self.BLACKLISTED_PUBLISHERS) != list:
             if self.BLACKLISTED_PUBLISHERS is None:
@@ -798,6 +802,10 @@ class Config(object):
         extra_newznabs = zip(*[iter(self.EXTRA_NEWZNABS.split(', '))]*6)
         return extra_newznabs
 
+    def get_extra_torznabs(self):
+        extra_torznabs = zip(*[iter(self.EXTRA_TORZNABS.split(', '))]*6)
+        return extra_torznabs
+
     def provider_sequence(self):
         PR = []
         PR_NUM = 0
@@ -821,7 +829,7 @@ class Config(object):
             PR.append('Torznab')
             PR_NUM +=1
 
-        PPR = ['32p', 'tpse', 'nzb.su', 'dognzb', 'Experimental', 'Torzanb']
+        PPR = ['32p', 'tpse', 'nzb.su', 'dognzb', 'Experimental', 'Torznab']
         if self.NEWZNAB:
             for ens in self.EXTRA_NEWZNABS:
                 if str(ens[5]) == '1': # if newznabs are enabled
@@ -833,6 +841,20 @@ class Config(object):
                         en_name = re.sub("\"", "", str(en_name)).strip()
                     PR.append(en_name)
                     PPR.append(en_name)
+                    PR_NUM +=1
+
+        if self.ENABLE_EXTRA_TORZNAB:
+            for ets in self.EXTRA_TORZNABS:
+                logger.fdebug('Extra torznab enabled: ' + str(ets[5]))
+                if str(ets[5]) == '1':
+                    if ets[0] == "":
+                        et_name = ets[1]
+                    else:
+                        et_name = ets[0]
+                    if et_name.endswith("\""):
+                        et_name = re.sub("\"", "", str(et_name)).strip()
+                    PR.append(et_name)
+                    PPR.append(et_name)
                     PR_NUM +=1
 
         if self.PROVIDER_ORDER is not None:

@@ -3065,7 +3065,7 @@ def get_the_hash(filepath):
     logger.info('Hash of file : ' + thehash)
     return {'hash':     thehash}
 
-def disable_provider(site, newznab=False):
+def disable_provider(site, newznab=False, torznab=False):
     logger.info('Temporarily disabling %s due to not responding' % site)
     if newznab is True:
         tmplist = []
@@ -3075,6 +3075,14 @@ def disable_provider(site, newznab=False):
                 tmpnewz[5] = '0'
             tmplist.append(tuple(tmpnewz))
         mylar.CONFIG.EXTRA_NEWZNABS = tmplist
+    elif torznab is True:
+        tmplist = []
+        for ti in mylar.CONFIG.EXTRA_TORZNABS:
+            tmptorz = list(ti)
+            if tmptorz[0] == site:
+                tmptorz[5] = '0'
+            tmplist.append(tuple(tmptorz))
+        mylar.CONFIG.EXTRA_TORZNABS = tmplist
     else:
         if site == 'nzbsu':
             mylar.CONFIG.NZBSU = False
@@ -3308,7 +3316,19 @@ def newznab_test(name, host, ssl, apikey):
     else:
         logger.info('Successfully connected: %s' % response['status_code'])
 
-
+def torznab_test(name, host, ssl, apikey):
+    params = {'t':      'caps',
+              'apikey': apikey,
+              'o':      json}
+    import requests
+    try:         
+        response = response.get(host, params=params, verify=ssl)
+    except:
+        logger.warn('Unable to connect')
+        return
+    else:
+        logger.info('Successfully connected: %s' % response['status_code'])
+        
 def file_ops(path,dst,arc=False,one_off=False):
 #    # path = source path + filename
 #    # dst = destination path + filename

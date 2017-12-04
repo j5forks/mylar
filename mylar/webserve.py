@@ -4304,6 +4304,8 @@ class WebInterface(object):
                     "torznab_host": mylar.CONFIG.TORZNAB_HOST,
                     "torznab_apikey": mylar.CONFIG.TORZNAB_APIKEY,
                     "torznab_category": mylar.CONFIG.TORZNAB_CATEGORY,
+                    "enable_extra_torznab": helpers.checked(mylar.CONFIG.ENABLE_EXTRA_TORZNAB),
+                    "extra_torznabs": sorted(mylar.CONFIG.EXTRA_TORZNABS, key=itemgetter(5), reverse=True),
                     "newznab": helpers.checked(mylar.CONFIG.NEWZNAB),
                     "extra_newznabs": sorted(mylar.CONFIG.EXTRA_NEWZNABS, key=itemgetter(5), reverse=True),
                     "enable_rss": helpers.checked(mylar.CONFIG.ENABLE_RSS),
@@ -4634,7 +4636,7 @@ class WebInterface(object):
         checked_configs = ['enable_https', 'launch_browser', 'syno_fix', 'auto_update', 'annuals_on', 'api_enabled', 'nzb_startup_search',
                            'enforce_perms', 'sab_to_mylar', 'torrent_local', 'torrent_seedbox', 'rtorrent_ssl', 'rtorrent_verify', 'rtorrent_startonload',
                            'enable_torrents', 'qbittorrent_startonload', 'enable_rss', 'nzbsu', 'nzbsu_verify',
-                           'dognzb', 'dognzb_verify', 'experimental', 'enable_torrent_search', 'enable_tpse', 'enable_32p', 'enable_torznab',
+                           'dognzb', 'dognzb_verify', 'experimental', 'enable_torrent_search', 'enable_tpse', 'enable_32p', 'enable_torznab', 'enable_extra_torznab',
                            'newznab', 'use_minsize', 'use_maxsize', 'ddump', 'failed_download_handling', 'sab_client_post_processing', 'nzbget_client_post_processing',
                            'failed_auto', 'post_processing', 'enable_check_folder', 'enable_pre_scripts', 'enable_snatch_script', 'enable_extra_scripts',
                            'enable_meta', 'cbr2cbz_only', 'ct_tag_cr', 'ct_tag_cbl', 'ct_cbz_overwrite', 'rename_files', 'replace_spaces', 'zero_level',
@@ -4654,6 +4656,7 @@ class WebInterface(object):
                 continue
 
         mylar.CONFIG.EXTRA_NEWZNABS = []
+        mylar.CONFIG.EXTRA_TORZNABS = []
 
         for kwarg in [x for x in kwargs if x.startswith('newznab_name')]:
             if kwarg.startswith('newznab_name'):
@@ -4678,6 +4681,37 @@ class WebInterface(object):
                 del kwargs[kwarg]
 
                 mylar.CONFIG.EXTRA_NEWZNABS.append((newznab_name, newznab_host, newznab_verify, newznab_api, newznab_uid, newznab_enabled))
+
+        for kwarg in [x for x in kwargs if x.startswith('torznab_name')]:
+            if kwarg.startswith('torznab_name'):
+                torznab_number = kwarg[12:]
+
+                if torznab_number != "":
+
+                    torznab_name = kwargs['torznab_name' + torznab_number]
+                    if torznab_name == "":
+                        torznab_name = kwargs['torznab_host' + torznab_number]
+                        if torznab_name == "":
+                            continue
+                    torznab_host = helpers.clean_url(kwargs['torznab_host' + torznab_number])
+                    try:
+                        torznab_verify = kwargs['torznab_verify' + torznab_number]
+                    except:
+                        torznab_verify = 0
+                    try:
+                        torznab_api = kwargs['torznab_api' + torznab_number]
+                    except KeyError:
+                        torznab_api = ""
+                        logger.fdebug('Error getting torznab_api for torznab_number: ' + str(torznab_number))
+                    torznab_category = kwargs['torznab_category' + torznab_number]
+                    try:
+                        torznab_enabled = int(kwargs['torznab_enabled' + torznab_number])
+                    except KeyError:
+                        torznab_enabled = 0
+
+                    del kwargs[kwarg]
+            
+                    mylar.CONFIG.EXTRA_TORZNABS.append((torznab_name, torznab_host, torznab_verify, torznab_api, torznab_category, torznab_enabled))
 
         mylar.CONFIG.process_kwargs(kwargs)
 

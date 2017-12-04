@@ -35,6 +35,22 @@ def _start_newznab_attr(self, attrsD):
 
 feedparser._FeedParserMixin._start_newznab_attr = _start_newznab_attr
 
+def _start_torznab_attr(self, attrsD):
+    context = self._getContext()
+
+    context.setdefault('torznab', feedparser.FeedParserDict())
+    context['torznab'].setdefault('tags', feedparser.FeedParserDict())
+
+    name = attrsD.get('name')
+    value = attrsD.get('value')
+
+    if name == 'category':
+        context['torznab'].setdefault('categories', []).append(value)
+    else:
+        context['torznab'][name] = value
+
+feedparser._FeedParserMixin._start_torznab_attr = _start_torznab_attr 
+
 def torrents(pickfeed=None, seriesname=None, issue=None, feedinfo=None):
     if pickfeed is None:
         return

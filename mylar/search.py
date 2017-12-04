@@ -123,6 +123,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
     newznabs = 0
 
     newznab_hosts = []
+    torznab_hosts = []
 
     if mylar.CONFIG.NEWZNAB is True:
         for newznab_host in mylar.CONFIG.EXTRA_NEWZNABS:
@@ -131,7 +132,15 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
                 nzbprovider.append('newznab:' + str(newznab_host[0]))
                 newznabs+=1
 
+    if mylar.CONFIG.ENABLE_EXTRA_TORZNAB is True:
+        for torznab_host in mylar.CONFIG.EXTRA_TORZNABS:
+            if torznab_host[5] == '1' or torznab_host[5] == 1:
+                torznab_hosts.append(torznab_host)
+                torprovider.append('torznab:' + str(torznab_host[0]))
+                torp+=1
+
     logger.fdebug('nzbprovider(s): ' + str(nzbprovider))
+    logger.fdebug('torrent/torznab provider(s): ' + str(torprovider))
     # --------
     logger.fdebug("there are : " + str(torp) + " torrent providers you have selected.")
     torpr = torp - 1
@@ -154,7 +163,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
         nzbprov = None
         return findit, nzbprov
 
-    prov_order, newznab_info = provider_sequence(nzbprovider, torprovider, newznab_hosts)
+    prov_order, newznab_info, torznab_info = provider_sequence(nzbprovider, torprovider, newznab_hosts, torznab_hosts)
     # end provider order sequencing
     logger.info('search provider order is ' + str(prov_order))
 
@@ -222,6 +231,13 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
                         newznab_host = nninfo['info']
                 if newznab_host is None:
                     logger.fdebug('there was an error - newznab information was blank and it should not be.')
+            elif 'torznab' in prov_order[prov_count]:
+                searchprov = 'extra_torznab'
+                for tninfo in torznab_info:
+                    if tninfo['provider'] == prov_order[prov_count]:
+                        torznab_host = tninfo['info']
+                if torznab_host is None:
+                    logger.fdebug('there was an error - torznab information was blank and it should not be.')
             else:
                 newznab_host = None
                 searchprov = prov_order[prov_count].lower()
@@ -232,7 +248,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
                 prov_count+=1
                 continue
             if searchmode == 'rss':
-                findit = NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="yes", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=unaltered_ComicName, oneoff=oneoff)
+                findit = NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, torznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="yes", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=unaltered_ComicName, oneoff=oneoff)
                 if findit['status'] is False:
                     if AlternateSearch is not None and AlternateSearch != "None":
                         chkthealt = AlternateSearch.split('##')
@@ -242,7 +258,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
                         for calt in chkthealt:
                             AS_Alternate = re.sub('##', '', calt)
                             logger.info(u"Alternate Search pattern detected...re-adjusting to : " + str(AS_Alternate))
-                            findit = NZB_SEARCH(AS_Alternate, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="yes", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=AS_Alternate, allow_packs=allow_packs, oneoff=oneoff)
+                            findit = NZB_SEARCH(AS_Alternate, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, torznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="yes", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=AS_Alternate, allow_packs=allow_packs, oneoff=oneoff)
                             if findit['status'] is True:
                                 break
                         if findit['status'] is True:
@@ -252,7 +268,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
                     break
 
             else:
-                findit = NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="no", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=unaltered_ComicName, allow_packs=allow_packs, oneoff=oneoff)
+                findit = NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, torznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="no", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=unaltered_ComicName, allow_packs=allow_packs, oneoff=oneoff)
                 if findit['status'] is False:
                     if AlternateSearch is not None and AlternateSearch != "None":
                         chkthealt = AlternateSearch.split('##')
@@ -262,7 +278,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
                         for calt in chkthealt:
                             AS_Alternate = re.sub('##', '', calt)
                             logger.info(u"Alternate Search pattern detected...re-adjusting to : " + str(AS_Alternate))
-                            findit = NZB_SEARCH(AS_Alternate, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="no", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=unaltered_ComicName, allow_packs=allow_packs, oneoff=oneoff)
+                            findit = NZB_SEARCH(AS_Alternate, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, searchprov, send_prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host, torznab_host, ComicVersion=ComicVersion, SARC=SARC, IssueArcID=IssueArcID, RSS="no", ComicID=ComicID, issuetitle=issuetitle, unaltered_ComicName=unaltered_ComicName, allow_packs=allow_packs, oneoff=oneoff)
                             if findit['status'] is True:
                                 break
                         if findit['status'] is True:
@@ -273,6 +289,10 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
 
             if searchprov == 'newznab':
                 searchprov = newznab_host[0].rstrip()
+
+            if searchprov == 'extra_torznab':
+                searchprov = torznab_host[0].rstrip()
+
             logger.info('Could not find Issue ' + IssueNumber + ' of ' + ComicName + ' (' + str(SeriesYear) + ') using ' + str(searchprov) + ' [' + str(searchmode) + ']')
             prov_count+=1
             #torprtmp+=1  #torprtmp-=1
@@ -302,7 +322,7 @@ def search_init(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueD
 
     return findit, 'None'
 
-def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, nzbprov, prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host=None, ComicVersion=None, SARC=None, IssueArcID=None, RSS=None, ComicID=None, issuetitle=None, unaltered_ComicName=None, allow_packs=None, oneoff=False):
+def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDate, StoreDate, nzbprov, prov_count, IssDateFix, IssueID, UseFuzzy, newznab_host=None, torznab_host=None, ComicVersion=None, SARC=None, IssueArcID=None, RSS=None, ComicID=None, issuetitle=None, unaltered_ComicName=None, allow_packs=None, oneoff=False):
 
     if any([allow_packs is None, allow_packs == 'None', allow_packs == 0, allow_packs == '0']) and all([mylar.CONFIG.ENABLE_TORRENT_SEARCH, mylar.CONFIG.ENABLE_32P]):
         allow_packs = False
@@ -341,6 +361,13 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
         else:
             category_newznab = '7030'
         logger.fdebug("using Newznab host of : " + str(name_newznab))
+    elif nzbprov == 'extra_torznab':
+        name_torznab = torznab_host[0].rstrip()
+        host_torznab = torznab_host[1].rstrip()
+        apikey = torznab_host[3].rstrip()
+        verify = bool(torznab_host[2])
+        category_torznab = torznab_host[4]
+        logger.fdebug("using Torznab host of : " + str(name_torznab))    
 
     if RSS == "yes":
         if 'newznab' in nzbprov:
@@ -350,6 +377,8 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
     else:
         if 'newznab' in nzbprov:
             tmpprov = name_newznab + ' (' + nzbprov + ')'
+        elif 'torznab' in nzbprov:
+            tmpprov = name_torznab + ' (' + nzbprov + ')'
         else:
             tmpprov = nzbprov
     logger.info(u"Shhh be very quiet...I'm looking for " + ComicName + " issue: " + IssueNumber + " (" + str(ComicYear) + ") using " + str(tmpprov))
@@ -575,6 +604,13 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
                         findurl = str(torznab_fix) + "?t=search&q=" + str(comsearch)
                         if str(mylar.CONFIG.TORZNAB_CATEGORY): findurl += "&cat=" + str(mylar.CONFIG.TORZNAB_CATEGORY)
                         apikey = mylar.CONFIG.TORZNAB_APIKEY
+                    elif nzbprov == 'extra_torznab':
+                        if host_torznab.endswith('/'):
+                            torznab_fix = host_torznab[:-1]
+                        else:
+                            torznab_fix = host_torznab
+                        findurl = str(torznab_fix) + "?t=search&q=" + str(comsearch)
+                        if str(category_torznab): findurl += "&cat=" + str(category_torznab)                    
                     else:
                         logger.warn('You have a blank newznab entry within your configuration. Remove it, save the config and restart mylar to fix things. Skipping this blank provider until fixed.')
                         findurl = None
@@ -1878,9 +1914,10 @@ def searchIssueIDList(issuelist):
         logger.warn('There are no search providers enabled atm - not performing the requested search for obvious reasons')
 
 
-def provider_sequence(nzbprovider, torprovider, newznab_hosts):
+def provider_sequence(nzbprovider, torprovider, newznab_hosts, torznab_hosts):
     #provider order sequencing here.
     newznab_info = []
+    torznab_info = []
     prov_order = []
 
     nzbproviders_lower = [x.lower() for x in nzbprovider]
@@ -1910,11 +1947,26 @@ def provider_sequence(nzbprovider, torprovider, newznab_hosts):
                             break
                 else:
                     for tp in torprovider:
-                        if (pr_order[1].lower() in tp.lower()):
+                        logger.fdebug('Torprovider: ' + tp)
+                        if all(['torznab' in tp, pr_order[1].lower() in tp.lower()]):
+                            for torznab_host in torznab_hosts:
+                                if torznab_host[0].lower() == pr_order[1].lower():
+                                    prov_order.append(tp) #torznab_host
+                                    torznab_info.append({"provider":    tp,
+                                                         "info":        torznab_host})
+                                    break
+                                else:
+                                    if torznab_host[0] == "":
+                                        if torznab_host[1].lower() == pr_order[1].lower():
+                                            prov_order.append(tp) #torznab_host
+                                            torznab_info.append({"provider":    tp,
+                                                                 "info":        torznab_host})
+                                            break
+                        elif (pr_order[1].lower() in tp.lower()):
                             prov_order.append(tp) #torrent provider
                             break
 
-    return prov_order, newznab_info
+    return prov_order, newznab_info, torznab_info
 
 def nzbname_create(provider, title=None, info=None):
     #the nzbname here is used when post-processing
