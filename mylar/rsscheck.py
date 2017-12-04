@@ -1055,8 +1055,6 @@ def torsend2client(seriesname, issue, seriesyear, linkit, site, pubhash=None):
                     logger.warn('[EPIC FAILURE] Cannot load the requests module')
                     return "fail"
         try:
-            logger.info('url: %s' % url)
-            logger.info('payload: %s' % payload)
             scraper = cfscrape.create_scraper()
             if cf_cookievalue:
                 r = scraper.get(url, params=payload, cookies=cf_cookievalue, verify=verify, stream=True, headers=headers)
@@ -1080,8 +1078,6 @@ def torsend2client(seriesname, issue, seriesyear, linkit, site, pubhash=None):
 
                     logger.debug('[TOR2CLIENT-32P] Creating CF Scraper')
                     scraper = cfscrape.create_scraper()
-
-                    logger.debug('[TOR2CLIENT-32P] payload: %s \n verify %s \n headers %s \n', payload, verify, headers)
 
                     try:
                         r = scraper.get(url, params=payload, verify=verify, allow_redirects=True)
